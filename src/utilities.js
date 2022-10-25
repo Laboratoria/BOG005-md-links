@@ -44,7 +44,7 @@ function getFilesMD(pathFileMD) { // Se lee el archivo o directorio (Directorio 
 
 const arrayFilesMDS = getFilesMD(folderRelative);
 
-// Leer el archivo .md y extraer los links
+// Leer un archivo .md y extraer los links
 function obtainInfoLink(filePathMD) {
     return new Promise((resolve, reject) => {
         const infoLink = [];
@@ -65,24 +65,19 @@ function obtainInfoLink(filePathMD) {
         })
     })
 }
-// obtainInfoLink(routeRelative).then((val) => { //.then dice que hacer cuando la promesa exitosa
-//     console.log(val)
-// })
+// obtainInfoLink(routeRelative).then((val) => {console.log(val)}) //.then dice que hacer cuando la promesa exitosa
 
-// Leer el array de archivos y extraer la información de los links
+// Leer el array de archivos y extraer info links con obtainInfoLink
 function getInfoLinks(allFilesMD) {
     return new Promise((resolve, reject) => {
-        const arrAllFilesMD = allFilesMD.forEach((file) => obtainInfoLink(file))
-        Promise.all(arrAllFilesMD).then((val) => {
-            if (val.flat() === '.md') {
-                resolve(val.flat())
-            }
-            else {
-                resolve('No hay links')
-            }
+
+        const arrAllFilesMD = allFilesMD.map((file) => obtainInfoLink(file))
+        
+        Promise.all(arrAllFilesMD).then((value) => { 
+            resolve(value.flat())
         })
     })
 }
-console.log(chalk.magenta(getInfoLinks(arrayFilesMDS)))
+// getInfoLinks(arrayFilesMDS).then((val) => {console.log(val)})
 
-module.exports = { getFilesMD, pathAbsolute, obtainInfoLink, getInfoLinks }
+module.exports = { getFilesMD, pathAbsolute, getInfoLinks }

@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
-const {pathAbsolute, getFilesMD} = require('./utilities.js');
+const {pathAbsolute, getFilesMD, getInfoLinks} = require('./utilities.js');
 const chalk = require('chalk');
-const routeRelative = 'pruebaDirectory';
+const routeRelative = 'testDirectory';
 
 
 // function existsFile(path) {
@@ -14,7 +14,9 @@ const mdLinks = (path, options) => {
   return new Promise((resolve, reject) => {
     const absolutPath = pathAbsolute(path);
     const arrayFileMDS = getFilesMD(absolutPath);
-    resolve(arrayFileMDS);
+    const obtainInfoLinks = getInfoLinks(arrayFileMDS);
+    console.log(obtainInfoLinks)
+    resolve(obtainInfoLinks);
 
   })
 
