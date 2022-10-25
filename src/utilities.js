@@ -1,11 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
-const { marked } = require('marked');
-const routeRelative = 'pruebaDirectory';
+const marked = require('marked');
+const routeRelative = 'src/testFile.md';
+const folderRelative = 'testDirectory';
 
 
-function pathAbsolute(pathParameter) {
+function pathAbsolute(pathParameter) { // Convirtiendo la ruta relativa en absoluta
     let pathForChange = '';
     if (!path.isAbsolute(pathParameter)) {
         pathForChange = path.resolve(pathParameter);
@@ -25,7 +26,6 @@ function getFilesMD(pathFileMD) { // Se lee el archivo o directorio (Directorio 
     if (isAFile && fileExtension === '.md') {
         arrayMD.push(pathObtain)
     } else if (isAFile && fileExtension !== '.md') {
-        console.log(chalk.red('Archivo no tiene extensión .md son', fileExtension))
     } else { // Leyendo directorio, comparando .md, empujando los nuevos resultados al array
         fs.readdirSync(pathFileMD).forEach(file => {
             let dirPath = path.join(pathFileMD, file);
@@ -40,45 +40,49 @@ function getFilesMD(pathFileMD) { // Se lee el archivo o directorio (Directorio 
     }
     return arrayMD; // Retornando un array de archivos MD 
 }
-// console.log(getFilesMD(routeRelative))
+// console.log(getFilesMD(folderRelative))
 
-
-const arrayMDFiles = getFilesMD(routeRelative);
+const arrayFilesMDS = getFilesMD(folderRelative);
 
 // Leer el archivo .md y extraer los links
-const getLinks = (arrMdFiles) => {
-    let mdLinks = [];
-    arrMdFiles.forEach((filesMD) => {
-        mdLinks.push(
-            new Promise((resolve, reject) => {
-                fs.readFile(filesMD, 'utf-8', (err, data) => {
-                    if (err) {
-                        console.error(err);
-                    } else {
-                        resolve({
-                            path: filesMD,
-                            data: data,
+function obtainInfoLink(filePathMD) {
+    return new Promise((resolve, reject) => {
+        const infoLink = [];
+        fs.readFile(filePathMD, 'utf-8', (err, data) => {
+            if (err) resolve(err);
+            marked.marked(data, {
+                walkTokens: (token) => {
+                    if (token.type === 'link' && token.href.includes('http')) {
+                        infoLink.push({
+                            href: token.href,
+                            text: token.text,
+                            file: filePathMD,
                         })
                     }
-                });
+                }
             })
-
-        )
+            resolve(infoLink);
+        })
     })
-    return mdLinks;
-    // return new Promise((resolve, reject) =>{
-    //     const mdLinks = [];
-    //     const fileExtension = path.extname((arrMdFiles) === '.md');
-    //     const selectMDLinks = fileExtension(arrMdFiles);
-    //     if(!selectMDLinks){
-    //         resolve(mdLinks);
-    //     }
-    // })
-
-    // usar readfile con forEache
-    // filter para extraer los links con una condición
 }
+// obtainInfoLink(routeRelative).then((val) => { //.then dice que hacer cuando la promesa exitosa
+//     console.log(val)
+// })
 
-console.log(getLinks(arrayMDFiles))
+// Leer el array de archivos y extraer la información de los links
+function getInfoLinks(allFilesMD) {
+    return new Promise((resolve, reject) => {
+        const arrAllFilesMD = allFilesMD.forEach((file) => obtainInfoLink(file))
+        Promise.all(arrAllFilesMD).then((val) => {
+            if (val.flat() === '.md') {
+                resolve(val.flat())
+            }
+            else {
+                resolve('No hay links')
+            }
+        })
+    })
+}
+console.log(chalk.magenta(getInfoLinks(arrayFilesMDS)))
 
-module.exports = { getFilesMD, pathAbsolute }
+module.exports = { getFilesMD, pathAbsolute, obtainInfoLink, getInfoLinks }
