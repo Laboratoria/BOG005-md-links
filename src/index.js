@@ -1,27 +1,29 @@
 const fs = require('fs');
 const path = require('path');
-const {pathAbsolute, getFilesMD, getInfoLinks} = require('./utilities.js');
+const fetch = require('node-fetch');
+const { pathAbsolute, getFilesMD, getInfoLinks, getRequestHTTP } = require('./utilities.js');
 const chalk = require('chalk');
-const routeRelative = 'testDirectory';
+const routeRelative = 'src/testFile.md';
+const folderRelative = 'testDirectory';
 
 
-// function existsFile(path) {
-//   return fs.existsSync(path);
-// }
-// console.log(existsFile(path))
-
-const mdLinks = (path, options) => {
+const mdLinks = (path, options = { validate: false }) => {
   return new Promise((resolve, reject) => {
     const absolutPath = pathAbsolute(path);
     const arrayFileMDS = getFilesMD(absolutPath);
     const obtainInfoLinks = getInfoLinks(arrayFileMDS);
-    console.log(obtainInfoLinks)
-    resolve(obtainInfoLinks);
-
+    const obtainInfoLinksHTTP = getRequestHTTP(arrayFileMDS);
+    if (options.validate === false) {
+      resolve(obtainInfoLinks);
+    } else {
+      resolve(obtainInfoLinksHTTP);
+    }
   })
 
 }
-mdLinks(routeRelative).then((data)=>{
-  console.log(data)
+mdLinks(routeRelative).then((data) => {
+  console.log('soy yo!!!', data)
 })
 
+
+module.exports = { mdLinks };
