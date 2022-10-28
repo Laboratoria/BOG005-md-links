@@ -16,6 +16,7 @@ function pathAbsolute(pathParameter) { // Convirtiendo la ruta relativa en absol
     }
     return pathForChange;
 }
+// console.log(chalk.magenta(pathAbsolute(folderRelative)));
 
 function getFilesMD(pathFileMD) { // Se lee el archivo o directorio (Directorio -> recursividad)
     const isAFile = fs.statSync(pathFileMD).isFile();
@@ -45,6 +46,7 @@ function getFilesMD(pathFileMD) { // Se lee el archivo o directorio (Directorio 
 // console.log(getFilesMD(folderRelative))
 
 const arrayFilesMDS = getFilesMD(folderRelative);
+// Solo saca la info de readFile
 
 // Leer un archivo .md y extraer los links
 function obtainInfoLink(filePathMD) {
@@ -67,7 +69,7 @@ function obtainInfoLink(filePathMD) {
         })
     })
 }
-// obtainInfoLink(routeRelative).then((val) => {console.log(val)}) //.then dice que hacer cuando la promesa exitosa
+// obtainInfoLink(routeRelative).then((val) => { console.log(val) }) //.then dice que hacer cuando la promesa exitosa
 
 // Leer el array de archivos y extraer info links con obtainInfoLink
 function getInfoLinks(allFilesMD) {
@@ -82,49 +84,19 @@ function getInfoLinks(allFilesMD) {
 }
 // getInfoLinks(arrayFilesMDS).then((val) => {console.log(val)})
 
-// Realizando la petición HTTP, cuando la validación es true
+// realizando la validación HTTP
 function getRequestHTTP(filePathMD) {
-    return new Promise((resolve, reject) => {
-        const infoLink = [];
-        fs.readFile(filePathMD, 'utf-8', (err, data) => {
-            if (err) resolve(err);
-            marked.marked(data, {
-                walkTokens: (token) => {
-                    if (token.type === 'link' && token.href.includes('http')) {
-                        infoLink.push({
-                            href: token.href,
-                            text: token.text,
-                            file: filePathMD,
-                        })
-                    }
-                }
-            })
-            // usando fetch para hacer la petición HTTP
-            const requestHTTP = infoLink.map((link) => {
-                fetch(link.href).then((answer) => {
-                    link.status = answer.status;
-                    link.txt = answer.status >= 200 && resolve.status > 400 ? 'Ok' : 'Fail';
-                    console.log('soy link', link)
-                })
-            })
-        })
-        console.log('Soy infolinks', infoLink);
-    })
+    const requestHTTP = filePathMD.map((link) => {
+       return fetch(link.href).then((answer) => {
+            link.status = answer.status;
+            link.txt = answer.status <= 299 ? 'Ok' : 'Fail';
+            //console.log('soy link', link)
+            return (link);
 
-}
-getRequestHTTP(routeRelative).then((val) => { console.log(val) })
-
-function getRequestHTTPLinks(allFilesMD) {
-    return new Promise((resolve, reject) => {
-
-        const arrRequestHTTP = allFilesMD.map((file) => getRequestHTTP(file))
-
-        Promise.all(arrRequestHTTP).then((value) => {
-            resolve(value.flat())
         })
     })
+    return Promise.all(requestHTTP)
 }
-// getRequestHTTPLinks(arrayFilesMDS).then((val) => {console.log(val)})
 
 module.exports = { getFilesMD, pathAbsolute, getInfoLinks, getRequestHTTP }
 
